@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Download, Info } from 'lucide-react'
 
 const frequencies = [
@@ -11,21 +11,31 @@ const frequencies = [
   { label: 'Daily', value: 20 }
 ]
 
-const defaultProject = {
-  id: Date.now(),
-  title: 'Project 1',
+const defaultProject = (i = 1) => ({
+  id: Date.now() + i,
+  title: `Project ${i}`,
   durationHours: 40,
   workforce: 2,
   frequency: 'Monthly',
   impact: 5,
   strategicAlignment: 5
-}
+})
+
+const STORAGE_KEY = 'bu_projects_v1'
 
 export default function BUPrioritization(){
-  const [projects, setProjects] = useState([defaultProject])
+  const [projects, setProjects] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) return JSON.parse(raw)
+    } catch (e) {
+      // ignore and fall back to default
+    }
+    return [defaultProject(1)]
+  })
   const [showGuide, setShowGuide] = useState(false)
 
-  const addProject = () => setProjects([...projects, { ...defaultProject, id: Date.now(), title: `Project ${projects.length + 1}` }])
+  const addProject = () => setProjects(prev => [...prev, { ...defaultProject(prev.length + 1), id: Date.now() }])
   const deleteProject = (id) => { if(projects.length>1) setProjects(projects.filter(p=>p.id!==id)) }
   const updateProject = (id, field, value) => setProjects(projects.map(p => p.id===id ? { ...p, [field]: value } : p))
 
@@ -52,6 +62,16 @@ export default function BUPrioritization(){
     a.download = 'bu_prioritization.csv'
     a.click()
   }
+
+  // persist to localStorage whenever projects change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects))
+    } catch (e) {
+      // storage write failed (quota?), ignore silently
+      console.warn('Failed to save projects to localStorage', e)
+    }
+  }, [projects])
 
   return (
     <div className="max-w-6xl mx-auto">
