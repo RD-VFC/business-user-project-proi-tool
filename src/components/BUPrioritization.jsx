@@ -73,6 +73,13 @@ export default function BUPrioritization(){
     }
   }, [projects])
 
+  // close modal on Escape
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') setShowGuide(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded shadow p-6 mb-6">
@@ -89,16 +96,23 @@ export default function BUPrioritization(){
         </div>
 
         {showGuide && (
-          <div className="mt-4 p-4 bg-slate-50 border rounded">
-            <div className="font-semibold mb-2">How to use this tool</div>
-            <div className="text-sm text-slate-700 space-y-2">
-              <div><strong>Duration (hrs):</strong> Total estimated person-hours to deliver the project (planning, development, QA, deployment).</div>
-              <div><strong>Workforce:</strong> Number of people working concurrently (FTEs). Use 1 if a single person will do the work.</div>
-              <div><strong>Frequency:</strong> How often the benefit occurs. Choices map to multipliers (One-time, Yearly, Quarterly, Monthly, Weekly, Daily).</div>
-              <div><strong>Impact (1-10):</strong> Business benefit if delivered — 1 low, 10 transformational.</div>
-              <div><strong>Strategic (1-10):</strong> How closely the project maps to strategic priorities — 1 low, 10 critical.</div>
-              <div className="pt-2 text-xs text-slate-500">Score formula: (Impact × Strategic Alignment × Frequency) / (Duration × Workforce) × 10</div>
-              <div className="pt-2"><a className="text-blue-600 underline" href="https://github.com/RD-VFC/business-user-project-proi-tool/blob/main/docs/input-metrics.md" target="_blank" rel="noreferrer">Full input guide & examples</a></div>
+          // Modal overlay
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setShowGuide(false)} aria-hidden="true" />
+            <div role="dialog" aria-modal="true" className="relative max-w-2xl w-full mx-4 bg-white rounded shadow-lg p-6">
+              <div className="flex items-start justify-between">
+                <h3 className="text-lg font-semibold">How to use this tool</h3>
+                <button onClick={() => setShowGuide(false)} className="text-slate-500 hover:text-slate-800">Close</button>
+              </div>
+              <div className="mt-4 text-sm text-slate-700 space-y-3">
+                <div><strong>Duration (hrs):</strong> Total estimated person-hours to deliver the project (planning, development, QA, deployment).</div>
+                <div><strong>Workforce:</strong> Number of people working concurrently (FTEs). Use 1 if a single person will do the work.</div>
+                <div><strong>Frequency:</strong> How often the benefit occurs. Choices map to multipliers (One-time, Yearly, Quarterly, Monthly, Weekly, Daily).</div>
+                <div><strong>Impact (1-10):</strong> Business benefit if delivered — 1 low, 10 transformational.</div>
+                <div><strong>Strategic (1-10):</strong> How closely the project maps to strategic priorities — 1 low, 10 critical.</div>
+                <div className="pt-2 text-xs text-slate-500">Score formula: (Impact × Strategic Alignment × Frequency) / (Duration × Workforce) × 10</div>
+                <div className="pt-2"><a className="text-blue-600 underline" href="https://github.com/RD-VFC/business-user-project-proi-tool/blob/main/docs/input-metrics.md" target="_blank" rel="noreferrer">Full input guide & examples</a></div>
+              </div>
             </div>
           </div>
         )}
