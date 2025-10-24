@@ -84,11 +84,23 @@ export default function BUPrioritization(){
           <div className="flex gap-2">
             <button onClick={exportCSV} className="px-3 py-2 bg-green-600 text-white rounded flex items-center gap-2"><Download className="w-4 h-4"/>Export CSV</button>
             <button onClick={addProject} className="px-3 py-2 bg-blue-600 text-white rounded flex items-center gap-2"><Plus className="w-4 h-4"/>Add Project</button>
+            <button onClick={()=>setShowGuide(g=>!g)} title="Show scoring help" className="px-3 py-2 bg-slate-100 text-slate-800 rounded flex items-center gap-2"><Info className="w-4 h-4"/>Help</button>
           </div>
         </div>
 
         {showGuide && (
-          <div className="mt-4 p-3 bg-slate-50 border rounded">BU Scoring: (Impact × Strategic Alignment × Frequency) / (Duration × Workforce) × 10</div>
+          <div className="mt-4 p-4 bg-slate-50 border rounded">
+            <div className="font-semibold mb-2">How to use this tool</div>
+            <div className="text-sm text-slate-700 space-y-2">
+              <div><strong>Duration (hrs):</strong> Total estimated person-hours to deliver the project (planning, development, QA, deployment).</div>
+              <div><strong>Workforce:</strong> Number of people working concurrently (FTEs). Use 1 if a single person will do the work.</div>
+              <div><strong>Frequency:</strong> How often the benefit occurs. Choices map to multipliers (One-time, Yearly, Quarterly, Monthly, Weekly, Daily).</div>
+              <div><strong>Impact (1-10):</strong> Business benefit if delivered — 1 low, 10 transformational.</div>
+              <div><strong>Strategic (1-10):</strong> How closely the project maps to strategic priorities — 1 low, 10 critical.</div>
+              <div className="pt-2 text-xs text-slate-500">Score formula: (Impact × Strategic Alignment × Frequency) / (Duration × Workforce) × 10</div>
+              <div className="pt-2"><a className="text-blue-600 underline" href="https://github.com/RD-VFC/business-user-project-proi-tool/blob/main/docs/input-metrics.md" target="_blank" rel="noreferrer">Full input guide & examples</a></div>
+            </div>
+          </div>
         )}
       </div>
 
