@@ -1,0 +1,334 @@
+import React, { useState } from 'react';
+import { Plus, Trash2, Save, Download, Info } from 'lucide-react';
+
+const BUPrioritization = () => {
+  const [projects, setProjects] = useState([
+    {
+      id: 1,
+      title: 'Project 1',
+      manualDuration: 16,
+      manualWorkforce: 2,
+      frequency: 'Quarterly',
+      impact: 7,
+      strategicAlignment: 9
+    }
+  ]);
+
+  const [showGuide, setShowGuide] = useState(false);
+
+  const frequencyOptions = [
+    { label: 'One-time', value: 0.1 },
+    { label: 'Yearly', value: 0.25 },
+    { label: 'Quarterly', value: 0.33 },
+    { label: 'Bi-monthly', value: 0.5 },
+    { label: 'Monthly', value: 1.0 },
+    { label: 'Weekly', value: 4.0 },
+    { label: 'Daily', value: 20.0 }
+  ];
+
+  const calculateScore = (project) => {
+    const { manualDuration, manualWorkforce, frequency, impact, strategicAlignment } = project;
+    
+    // Get numerical value from frequency label
+    const frequencyValue = frequencyOptions.find(f => f.label === frequency)?.value || 0.1;
+    
+    // Avoid division by zero
+    const duration = manualDuration || 1;
+    const workforce = manualWorkforce || 1;
+    
+    // Core formula: (Impact × Strategic × Frequency) / (Duration × Workforce)
+    const score = (impact * strategicAlignment * frequencyValue) / (duration * workforce);
+    
+    // Scale to more readable numbers (multiply by 10)
+    const scaledScore = score * 10;
+    
+    return scaledScore.toFixed(2);
+  };
+
+  const addProject = () => {
+    setProjects([...projects, {
+      id: Date.now(),
+      title: `Project ${projects.length + 1}`,
+      manualDuration: 8,
+      manualWorkforce: 2,
+      frequency: 'Monthly',
+      impact: 5,
+      strategicAlignment: 5
+    }]);
+  };
+
+  const updateProject = (id, field, value) => {
+    setProjects(projects.map(p => 
+      p.id === id ? { ...p, [field]: value } : p
+    ));
+  };
+
+  const deleteProject = (id) => {
+    if (projects.length > 1) {
+      setProjects(projects.filter(p => p.id !== id));
+    }
+  };
+
+  const sortedProjects = [...projects].sort((a, b) => {
+    return parseFloat(calculateScore(b)) - parseFloat(calculateScore(a));
+  });
+
+  const exportToCSV = () => {
+    const headers = ['Rank', 'Project Title', 'Manual Duration (Hrs)', 'Manual Workforce (People)', 'Frequency', 'Impact (1-10)', 'Strategic Alignment (1-10)', 'Score'];
+    const rows = sortedProjects.map((p, idx) => [
+      idx + 1,
+      p.title,
+      p.manualDuration,
+      p.manualWorkforce,
+      p.frequency,
+      p.impact,
+      p.strategicAlignment,
+      calculateScore(p)
+    ]);
+    
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bu_prioritization.csv';
+    a.click();
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">BU Project Prioritization</h1>
+              <p className="text-slate-600 mt-1">Committee Self-Assessment Tool</p>
+            </div>
+            <button
+              onClick={() => setShowGuide(!showGuide)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Info className="w-4 h-4" />
+              Scoring Guide
+            </button>
+          </div>
+
+          {showGuide && (
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+              <h3 className="font-semibold text-blue-900 mb-3">Scoring Guidelines</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold text-blue-800 mb-2">Frequency Options:</p>
+                  <ul className="space-y-1 text-blue-700">
+                    {frequencyOptions.map(opt => (
+                      <li key={opt.label}>• <strong>{opt.label}</strong> (value: {opt.value})</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <p className="font-semibold text-blue-800 mb-2">Impact & Strategic (1-10):</p>
+                  <ul className="space-y-1 text-blue-700">
+                    <li>• <strong>1-3:</strong> Low impact/alignment</li>
+                    <li>• <strong>4-6:</strong> Medium impact/alignment</li>
+                    <li>• <strong>7-8:</strong> High impact/alignment</li>
+                    <li>• <strong>9-10:</strong> Critical impact/alignment</li>
+                  </ul>
+                  
+                  <p className="font-semibold text-blue-800 mt-3 mb-2">Formula:</p>
+                  <p className="font-mono text-xs bg-blue-100 p-2 rounded text-blue-900">
+                    Score = (Impact × Strategic × Frequency) / (Duration × Workforce) × 10
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input Table */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-slate-800">Project Input</h2>
+            <div className="flex gap-3">
+              <button
+                onClick={exportToCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+              <button
+                onClick={addProject}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Project
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-blue-100 border-b-2 border-blue-300">
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 border border-slate-300">Project Title</th>
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 border border-slate-300">Manual Duration (Hrs)</th>
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 border border-slate-300">Manual Workforce (People)</th>
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 border border-slate-300">Frequency</th>
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 border border-slate-300">Impact (1-10)</th>
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 border border-slate-300">Strategic Alignment (1-10)</th>
+                  <th className="text-left p-3 text-sm font-bold text-slate-800 bg-green-50 border border-slate-300">Score</th>
+                  <th className="text-center p-3 text-sm font-bold text-slate-800 border border-slate-300">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project) => (
+                  <tr key={project.id} className="border-b border-slate-200 hover:bg-slate-50">
+                    <td className="p-2 border border-slate-200">
+                      <input
+                        type="text"
+                        value={project.title}
+                        onChange={(e) => updateProject(project.id, 'title', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter project name"
+                      />
+                    </td>
+                    <td className="p-2 border border-slate-200">
+                      <input
+                        type="number"
+                        value={project.manualDuration}
+                        onChange={(e) => updateProject(project.id, 'manualDuration', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="0"
+                        step="1"
+                      />
+                    </td>
+                    <td className="p-2 border border-slate-200">
+                      <input
+                        type="number"
+                        value={project.manualWorkforce}
+                        onChange={(e) => updateProject(project.id, 'manualWorkforce', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="0"
+                        step="1"
+                      />
+                    </td>
+                    <td className="p-2 border border-slate-200">
+                      <select
+                        value={project.frequency}
+                        onChange={(e) => updateProject(project.id, 'frequency', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {frequencyOptions.map(opt => (
+                          <option key={opt.label} value={opt.label}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-2 border border-slate-200">
+                      <input
+                        type="number"
+                        value={project.impact}
+                        onChange={(e) => updateProject(project.id, 'impact', Math.min(10, Math.max(1, parseFloat(e.target.value) || 1)))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1"
+                        max="10"
+                        step="1"
+                      />
+                    </td>
+                    <td className="p-2 border border-slate-200">
+                      <input
+                        type="number"
+                        value={project.strategicAlignment}
+                        onChange={(e) => updateProject(project.id, 'strategicAlignment', Math.min(10, Math.max(1, parseFloat(e.target.value) || 1)))}
+                        className="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="1"
+                        max="10"
+                        step="1"
+                      />
+                    </td>
+                    <td className="p-2 border border-slate-200 bg-green-50">
+                      <div className="text-center font-bold text-lg text-green-700">
+                        {calculateScore(project)}
+                      </div>
+                    </td>
+                    <td className="p-2 border border-slate-200 text-center">
+                      <button
+                        onClick={() => deleteProject(project.id)}
+                        disabled={projects.length === 1}
+                        className={`p-2 rounded transition-colors ${
+                          projects.length === 1 
+                            ? 'text-slate-300 cursor-not-allowed' 
+                            : 'text-red-600 hover:bg-red-50'
+                        }`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Priority Ranking */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-slate-800 mb-4">Priority Ranking</h2>
+          <div className="space-y-3">
+            {sortedProjects.map((project, index) => {
+              const score = parseFloat(calculateScore(project));
+              const maxScore = Math.max(...sortedProjects.map(p => parseFloat(calculateScore(p))));
+              const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+              
+              return (
+                <div key={project.id} className="border-2 border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold text-lg">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">{project.title}</h3>
+                        <p className="text-sm text-slate-500">
+                          {project.manualDuration}hrs • {project.manualWorkforce} people • {project.frequency}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-blue-600">{calculateScore(project)}</div>
+                      <div className="text-xs text-slate-500">Priority Score</div>
+                    </div>
+                  </div>
+                  
+                  <div className="w-full bg-slate-200 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+                    <div>
+                      <span className="text-slate-600">Impact:</span>
+                      <span className="ml-2 font-semibold text-slate-800">{project.impact}/10</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Strategic Alignment:</span>
+                      <span className="ml-2 font-semibold text-slate-800">{project.strategicAlignment}/10</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BUPrioritization;
